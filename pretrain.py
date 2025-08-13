@@ -18,7 +18,7 @@ from model import *
 
 
 path_arr = [
-    './dataset/cityA_groundtruthdata.csv.gz',
+    './dataset/cityA_challengedata.csv.gz',
     './dataset/cityB_challengedata.csv.gz',
     './dataset/cityC_challengedata.csv.gz',
     './dataset/cityD_challengedata.csv.gz'
