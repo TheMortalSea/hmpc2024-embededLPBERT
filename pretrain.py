@@ -18,10 +18,10 @@ from model import *
 
 
 path_arr = [
-    './dataset/cityA_challengedata.csv.gz',
-    './dataset/cityB_challengedata.csv.gz',
-    './dataset/cityC_challengedata.csv.gz',
-    './dataset/cityD_challengedata.csv.gz'
+    './dataset/city_A_challengedata.csv.gz',
+    './dataset/city_B_challengedata.csv.gz',
+    './dataset/city_C_challengedata.csv.gz',
+    './dataset/city_D_challengedata.csv.gz'
 ]
 
 

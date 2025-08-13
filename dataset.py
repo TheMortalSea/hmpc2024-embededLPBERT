@@ -286,10 +286,10 @@ class TestSet(Dataset):
     
     def get_city_code(self, path):
         path_dict = {
-            './dataset/cityA_groundtruthdata.csv.gz':1,
-            './dataset/cityB_challengedata.csv.gz':2,
-            './dataset/cityC_challengedata.csv.gz':3,
-            './dataset/cityD_challengedata.csv.gz':4
+            './dataset/city_A_challengedata.csv.gz':1,
+            './dataset/city_B_challengedata.csv.gz':2,
+            './dataset/city_C_challengedata.csv.gz':3,
+            './dataset/city_D_challengedata.csv.gz':4
         }
         return path_dict.get(path, 'No such dataset!')
 
