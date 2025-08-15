@@ -167,7 +167,7 @@ def train(args):
             best_loss = current_loss
             save_dir = '/content/drive/MyDrive'
             os.makedirs(save_dir, exist_ok=True)
-            model_save_path = f'{save_dir}/best_model_epoch_{epoch_id+1}_loss_{current_loss:.4f}_{current_time.strftime("%Y%m%d_%H%M%S")}.pth'
+            model_save_path = f'{save_dir}/best_pretrain_model.pth'
             torch.save(model.state_dict(), model_save_path)
             print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {current_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
         else:
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--num_workers', type=int, default=4)
+    parser.add_argument('--num_workers', type=int, default=6)
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
