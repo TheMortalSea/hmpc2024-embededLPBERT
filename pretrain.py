@@ -126,9 +126,10 @@ def train(args):
 
             # 计算损失，反向传播计算梯度并更新模型参数，清除累积梯度
             loss = criterion(output[pred_mask], label[pred_mask])
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
+            
 
             step = epoch_id * len(dataloader_train) + batch_id
 
@@ -143,8 +144,11 @@ def train(args):
 
         # 保存模型权重到 wandb
         current_time = datetime.datetime.now()
-        model_save_path = f'model_{current_time.strftime("%Y_%m_%d_%H_%M_%S")}_epoch{epoch_id}.pth'
+        model_save_path = f'pretrained_model.pth'
         torch.save(model.state_dict(), model_save_path)
+
+        print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {loss.item():.4f}")
+        print(f"Model saved to {model_save_path}")
         # model_save_path = os.path.join(wandb.run.dir, f'model_{current_time.strftime("%Y_%m_%d_%H_%M_%S")}_epoch{epoch_id}.pth')
         # torch.save(model.state_dict(), model_save_path)
         # wandb.save(model_save_path)

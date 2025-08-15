@@ -11,17 +11,17 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-import wandb
+# import wandb
 
 from dataset import *
 from model import *
 
 
 path_arr = [
-    './dataset/cityA_groundtruthdata.csv.gz',
-    './dataset/cityB_challengedata.csv.gz',
-    './dataset/cityC_challengedata.csv.gz',
-    './dataset/cityD_challengedata.csv.gz'
+    './dataset/city_A_challengedata.csv.gz',
+    './dataset/city_B_challengedata.csv.gz',
+    './dataset/city_C_challengedata.csv.gz',
+    './dataset/city_D_challengedata.csv.gz'
 ]
 
 # 设置随机种子以确保结果的可重复性
@@ -76,9 +76,9 @@ def finetune(args):
     name = 'LPBERT-postembedAB-finetuneC'
     current_time = datetime.datetime.now()R
     # 初始化 wandb
-    wandb.init(project="LPBERT", name=name, config=args)
-    wandb.run.name = name  # Set the run name
-    wandb.run.save()
+    # wandb.init(project="LPBERT", name=name, config=args)
+    # wandb.run.name = name  # Set the run name
+    # wandb.run.save()
 
     # 加载训练集
     dataset_train = TrainSet(path_arr[2])
@@ -139,12 +139,12 @@ def finetune(args):
             step = epoch_id * len(dataloader_train) + batch_id
 
             # 使用 wandb 记录 loss
-            wandb.log({"loss": loss.detach().item(), "step": step})
+            # wandb.log({"loss": loss.detach().item(), "step": step})
 
         scheduler.step()
 
          # 在每个 epoch 结束时记录当前的 loss
-        wandb.log({"epoch_loss": loss.detach().item(), "epoch": epoch_id})
+        # wandb.log({"epoch_loss": loss.detach().item(), "epoch": epoch_id})
 
         # 保存模型权重到 wandb
         current_time = datetime.datetime.now()
@@ -158,7 +158,7 @@ def finetune(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pretrained_model', type=str, default='/home/xingtong/Documents/hmpc2024/wandb/run-20240912_185030-ls2llvll/files/model_2024_09_15_01_56_36_epoch90.pth')
+    parser.add_argument('--pretrained_model', type=str, default='/h/model_2024_09_15_01_56_36_epoch90.pth')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=100)  # 微调可以选择较少的epochs
     parser.add_argument('--num_workers', type=int, default=2)
