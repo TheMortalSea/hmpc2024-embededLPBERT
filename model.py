@@ -13,7 +13,7 @@ class DayEmbeddingModel(nn.Module):
     def __init__(self, embed_size):
         super(DayEmbeddingModel, self).__init__()
         self.day_embedding = nn.Embedding(
-            num_embeddings=75+1,
+            num_embeddings=75+2,
             embedding_dim=embed_size,
         )
     def forward(self, day):
