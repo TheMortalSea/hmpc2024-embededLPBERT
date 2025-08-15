@@ -114,6 +114,18 @@ def train(args):
             batch['label_y'] = batch['label_y'].to(device)
             batch['len'] = batch['len'].to(device)
 
+            def check_range(name, tensor, max_allowed):
+                if tensor.max() >= max_allowed or tensor.min() < 0:
+                    print(f"[ERROR] {name} out of range!")
+                    print(f"Min: {tensor.min().item()}, Max: {tensor.max().item()}, Allowed: 0–{max_allowed-1}")
+                    raise ValueError(f"{name} values out of range.")
+
+            check_range("day", batch['d'], model.embedding_layer.day_embedding.day_embedding.num_embeddings)
+            check_range("time", batch['t'], model.embedding_layer.time_embedding.time_embedding.num_embeddings)
+            check_range("location_x", batch['input_x'], model.embedding_layer.location_x_embedding.location_embedding.num_embeddings)
+            check_range("location_y", batch['input_y'], model.embedding_layer.location_y_embedding.location_embedding.num_embeddings)
+            check_range("timedelta", batch['time_delta'], model.embedding_layer.timedelta_embedding.timedelta_embedding.num_embeddings)
+            check_range("city", batch['city'], model.city_embedding.city_embedding.num_embeddings)
             # 将数据输入模型中得到输出
             output = model(batch['d'], batch['t'], batch['input_x'], batch['input_y'], batch['time_delta'], batch['len'], batch['city'])
 
