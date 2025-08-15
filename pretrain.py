@@ -149,18 +149,29 @@ def train(args):
             # wandb.log({"loss": loss.detach().item(), "step": step})
 
         # 调整学习率
-        scheduler.step()
+    scheduler.step()
 
         # 在每个 epoch 结束时记录当前的 loss
         # wandb.log({"epoch_loss": loss.detach().item(), "epoch": epoch_id})
 
         # 保存模型权重到 wandb
-        current_time = datetime.datetime.now()
-        model_save_path = f'pretrained_model.pth'
-        torch.save(model.state_dict(), model_save_path)
+    current_time = datetime.datetime.now()
+     # Add this before your training loop (after model initialization)
+    best_loss = float('inf')  # Initialize with infinity
 
-        print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {loss.item():.4f}")
-        print(f"Model saved to {model_save_path}")
+    # Then in your training loop, replace your saving block with:
+    current_loss = loss.item()
+    current_time = datetime.datetime.now()
+
+    if current_loss < best_loss:
+        best_loss = current_loss
+        save_dir = '/content/drive/MyDrive'
+        os.makedirs(save_dir, exist_ok=True)
+        model_save_path = f'{save_dir}/best_model_epoch_{epoch_id+1}_loss_{current_loss:.4f}_{current_time.strftime("%Y%m%d_%H%M%S")}.pth'
+        torch.save(model.state_dict(), model_save_path)
+        print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {current_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+    else:
+        print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {current_loss:.4f} - Best loss still: {best_loss:.4f}")
         # model_save_path = os.path.join(wandb.run.dir, f'model_{current_time.strftime("%Y_%m_%d_%H_%M_%S")}_epoch{epoch_id}.pth')
         # torch.save(model.state_dict(), model_save_path)
         # wandb.save(model_save_path)
