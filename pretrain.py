@@ -169,9 +169,9 @@ def train(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--num_workers', type=int, default=2)
+    parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
