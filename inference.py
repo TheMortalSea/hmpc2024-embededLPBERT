@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--city_embed', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
     parser.add_argument('--heads_num', type=int, default=8)
-    parser.add_argument('--cuda', type=int, default=2)
+    parser.add_argument('--cuda', type=int, default=0)
     args = parser.parse_args()
 
     Inference(args)
