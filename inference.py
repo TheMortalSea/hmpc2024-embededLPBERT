@@ -117,7 +117,7 @@ def Inference(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pth_file', type=str, default='./wandb/run-20240915_111414-jw4v17h2/files/model_2024_09_18_09_28_41_epoch98.pth')     # 改为训练完成的模型的存储地址
+    parser.add_argument('--pth_file', type=str, default='/content/drive/MyDrive/best_finetune_model.pth)     # 改为训练完成的模型的存储地址
     parser.add_argument('--num_workers', type=int, default=2)
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--city_embed', type=int, default=4)
