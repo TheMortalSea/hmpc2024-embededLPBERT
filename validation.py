@@ -48,7 +48,7 @@ def Validation(args):
         os.makedirs(result_path, exist_ok=True)
         
         # 加载验证集
-        dataset_val = ValidationSet(path_arr[city_idx], is_100val=True)
+        dataset_val = ValidationSet(path_arr[city_idx], is_100val=False)
         dataloader_val = DataLoader(dataset_val, batch_size=1, num_workers=args.num_workers)
         
         # 通过cuda:<device_id>指定使用的GPU
