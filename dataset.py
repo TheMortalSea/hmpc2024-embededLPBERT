@@ -144,7 +144,7 @@ class ValidationSet(Dataset):
 
             if is_100val:
                 # 获取前 100 个用户的唯一 ID（按照数据出现的顺序）
-                first_100_uids = traj_df['uid'].unique()[:100]
+                first_100_uids = traj_df['uid'].unique()[:500]  #THIS LINE WAS ORIGINALLY 100 CHANGED FOR TESTING LARGER
                 # 筛选数据，保留前 100 个用户的数据
                 traj_df = traj_df[traj_df['uid'].isin(first_100_uids)]
 
