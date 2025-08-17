@@ -66,8 +66,9 @@ def Validation(args):
         model.eval()  # 评估模式
         
         with torch.no_grad():
-            for user_id, data in enumerate(tqdm(dataloader_val, desc=f"City {city_letter}")):
+            for data in tqdm(dataloader_val, desc=f"City {city_letter}"):
                 # 将数据加载到GPU上
+                data['uid'] = data['uid'].to(device)
                 data['d'] = data['d'].to(device)
                 data['t'] = data['t'].to(device)
                 data['input_x'] = data['input_x'].to(device)
@@ -98,24 +99,26 @@ def Validation(args):
                 
                 # 生成预测结果
                 pred = torch.stack(pred)
-                generated = torch.cat((data['d'][pred_mask].unsqueeze(-1)-1,
+                generated = torch.cat((data['uid'][pred_mask].unsqueeze(-1),
+                                     data['d'][pred_mask].unsqueeze(-1)-1,
                                      data['t'][pred_mask].unsqueeze(-1)-1,
                                      pred+1), dim=-1).cpu().tolist()
                 
                 # 生成参考结果（标签）
-                reference = torch.cat((data['d'][pred_mask].unsqueeze(-1)-1,
+                reference = torch.cat((data['uid'][pred_mask].unsqueeze(-1),
+                                     data['d'][pred_mask].unsqueeze(-1)-1,
                                      data['t'][pred_mask].unsqueeze(-1)-1,
                                      label[pred_mask]+1), dim=-1).cpu().tolist()
                 
-                # 为每个轨迹点添加user_id和step_id
-                for step_id, point in enumerate(generated):
-                    all_generated.append([user_id, step_id] + point)
+                # 添加轨迹点 (不使用step_id)
+                for point in generated:
+                    all_generated.append(point)
                 
-                for step_id, point in enumerate(reference):
-                    all_reference.append([user_id, step_id] + point)
+                for point in reference:
+                    all_reference.append(point)
         
         # 转换为DataFrame并保存为CSV
-        columns = ['user_id', 'step_id', 'day', 'time', 'x', 'y']
+        columns = ['uid', 'd', 't', 'x', 'y']
         
         generated_df = pd.DataFrame(all_generated, columns=columns)
         reference_df = pd.DataFrame(all_reference, columns=columns)
@@ -138,7 +141,7 @@ if __name__ == '__main__':
     parser.add_argument('--layers_num', type=int, default=4)
     parser.add_argument('--heads_num', type=int, default=8)
     parser.add_argument('--cuda', type=int, default=0)
-    parser.add_argument('--cities', nargs='*', type=str, 
+    parser.add_argument('--cities', nargs='*', type=str,
                        help='Cities to process (e.g., --cities B C D). If not specified, defaults to B C D')
     
     args = parser.parse_args()
