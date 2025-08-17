@@ -6,8 +6,9 @@ import numpy as np
 from collections import defaultdict
 from tqdm import tqdm
 # Import the functions from the geobleu.py file
-# IMPORTANT: This assumes geobleu.py is in the same directory.
-from seq_eval import *
+# IMPORTANT: This assumes geobleu.py is in the same directory
+
+import geobleu as gb
 
 def load_trajectories(file_path):
     """
