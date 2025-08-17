@@ -33,7 +33,7 @@ def load_trajectories(file_path):
             header = next(reader)
             
             # Update header check for new format (without step_id)
-            if header != ['user_id', 'd', 't', 'x', 'y']:
+            if header != ['uid', 'd', 't', 'x', 'y']:
                 raise ValueError(f"CSV file header does not match expected format. Got: {header}")
             
             for row in tqdm(reader, desc=f"Loading {os.path.basename(file_path)}"):
