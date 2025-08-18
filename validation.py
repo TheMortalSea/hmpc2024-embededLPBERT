@@ -79,8 +79,8 @@ def Test(args):
                 # print(f"Current batch - Max X: {max_x}, Min X: {min_x}")
                 # print(f"Current batch - Max Y: {max_y}, Min Y: {min_y}")
                 
-                if max_x > 201 or max_y > 201:
-                    print("ERROR: Found an out-of-bounds value!")
+                # if max_x > 201 or max_y > 201:
+                #     print("ERROR: Found an out-of-bounds value!")
                 
                 # Load data to GPU
                 data['uid'] = data['uid'].to(device)
