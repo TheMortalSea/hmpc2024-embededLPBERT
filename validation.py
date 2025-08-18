@@ -239,6 +239,8 @@ def Test(args):
                 data['input_y'] = data['input_y'].to(device)
                 data['time_delta'] = data['time_delta'].to(device)
                 data['city'] = data['city'].to(device)
+                data['label_x'] = data['label_x'].to(device)
+                data['label_y'] = data['label_y'].to(device)
                 data['len'] = data['len'].to(device)
                 
                 # Get the predictions
