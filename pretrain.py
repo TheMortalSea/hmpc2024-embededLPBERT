@@ -150,8 +150,6 @@ def train(args):
             # 使用 wandb 记录 loss
             # wandb.log({"loss": loss.detach().item(), "step": step})
 
-        current_time = datetime.datetime.now()
-
         avg_epoch_loss = total_epoch_loss / len(dataloader_train)
 
         scheduler.step()
