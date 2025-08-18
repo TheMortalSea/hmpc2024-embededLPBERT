@@ -13,7 +13,7 @@ path_arr = [
     './dataset/city_C_challengedata.csv.gz',
     './dataset/city_D_challengedata.csv.gz'
 ]
-
+ 
 city_names = ['A', 'B', 'C', 'D']
 
 def Test(args):
