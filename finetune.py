@@ -107,6 +107,7 @@ def finetune(args):
 
     # 微调循环
     for epoch_id in range(args.epochs):
+        total_epoch_loss = 0
         for batch_id, batch in enumerate(tqdm(dataloader_train)):
 
             # 按批次将数据加载至GPU中
@@ -136,37 +137,29 @@ def finetune(args):
             optimizer.step()
             optimizer.zero_grad()
 
+            total_epoch_loss += loss.detach().item()
+
             step = epoch_id * len(dataloader_train) + batch_id
+        
+    # After the inner loop, calculate the average loss for the epoch
+    avg_epoch_loss = total_epoch_loss / len(dataloader_train)
+    
+    # Log the average epoch loss
+    # wandb.log({"epoch_loss": avg_epoch_loss, "epoch": epoch_id})
 
-            # 使用 wandb 记录 loss
-            # wandb.log({"loss": loss.detach().item(), "step": step})
+    scheduler.step()
 
-        scheduler.step()
-
-            # 在每个 epoch 结束时记录当前的 loss
-            # wandb.log({"epoch_loss": loss.detach().item(), "epoch": epoch_id})
-
-            # 保存模型权重到 wandb
-        current_time = datetime.datetime.now()
-        # Add this before your training loop (after model initialization)
-        best_loss = float('inf')  # Initialize with infinity
-
-        # Then in your training loop, replace your saving block with:
-        current_loss = loss.item()
-        current_time = datetime.datetime.now()
-
-        if current_loss < best_loss:
-            best_loss = current_loss
-            save_dir = '/content/drive/MyDrive'
-            os.makedirs(save_dir, exist_ok=True)
-            model_save_path = f'{save_dir}/best_finetune_model.pth'
-            torch.save(model.state_dict(), model_save_path)
-            print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {current_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
-        else:
-            print(f"Epoch {epoch_id + 1}/{args.epochs}, Loss: {current_loss:.4f} - Best loss still: {best_loss:.4f}")
-            # model_save_path = os.path.join(wandb.run.dir, f'model_{current_time.strftime("%Y_%m_%d_%H_%M_%S")}_epoch{epoch_id}.pth')
-            # torch.save(model.state_dict(), model_save_path)
-            # wandb.save(model_save_path)
+    # Now, use the average epoch loss for the saving condition
+    current_time = datetime.datetime.now()
+    if avg_epoch_loss < best_loss:
+        best_loss = avg_epoch_loss
+        save_dir = '/content/drive/MyDrive'
+        os.makedirs(save_dir, exist_ok=True)
+        model_save_path = f'{save_dir}/best_finetune_model.pth'
+        torch.save(model.state_dict(), model_save_path)
+        print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+    else:
+        print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
 
 
 
