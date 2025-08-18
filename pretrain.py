@@ -161,15 +161,15 @@ def train(args):
 
         # Then in your training loop, replace your saving block with:
         current_time = datetime.datetime.now()
-            if avg_epoch_loss < best_loss:
-                best_loss = avg_epoch_loss
-                save_dir = '/content/drive/MyDrive'
-                os.makedirs(save_dir, exist_ok=True)
-                model_save_path = f'{save_dir}/best_pretrain_model.pth'
-                torch.save(model.state_dict(), model_save_path)
-                print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
-            else:
-                print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
+        if avg_epoch_loss < best_loss:
+            best_loss = avg_epoch_loss
+            save_dir = '/content/drive/MyDrive'
+            os.makedirs(save_dir, exist_ok=True)
+            model_save_path = f'{save_dir}/best_pretrain_model.pth'
+            torch.save(model.state_dict(), model_save_path)
+            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+        else:
+            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
 
 
 if __name__ == '__main__':
