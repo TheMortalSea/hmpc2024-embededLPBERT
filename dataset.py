@@ -259,6 +259,10 @@ class TestSet(Dataset):
                 t = traj['t'].to_numpy()
                 input_x = traj['x'].to_numpy()   # 创建独立副本
                 input_y = traj['y'].to_numpy()   # 创建独立副本
+
+                input_x[input_x == 999] = 201
+                input_y[input_y == 999] = 201
+                
                 time_delta = np.insert((traj['d'].to_numpy()[1:] * 48 + traj['t'].to_numpy()[1:]) - 
                                         (traj['d'].to_numpy()[:-1] * 48 + traj['t'].to_numpy()[:-1]), 0, 0)
                 time_delta[time_delta > 47] = 47
