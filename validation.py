@@ -1,5 +1,6 @@
 import os
 import argparse
+import json
 import pandas as pd
 from tqdm import tqdm
 import torch
@@ -16,24 +17,19 @@ path_arr = [
 
 city_names = ['A', 'B', 'C', 'D']
 
-def Test(args):
-    """
-    Performs inference on the final test set for specified cities.
-    The test set contains 3000 users for cities B, C, and D.
-    Note: The TestSet class does not provide ground-truth labels.
-    """
+def Validation(args):
     # Determine which cities to process
     if args.cities:
+        # Convert city letters to indices
         city_indices = []
         for city in args.cities:
-            city_upper = city.upper()
-            if city_upper in ['B', 'C', 'D']:
-                city_indices.append(city_names.index(city_upper))
+            if city.upper() in city_names:
+                city_indices.append(city_names.index(city.upper()))
             else:
-                print(f"Warning: Test set is only available for cities B, C, and D. Skipping city {city}.")
+                print(f"Warning: City {city} not found. Available cities: A, B, C, D")
         
         if not city_indices:
-            print("No valid cities specified for testing. Exiting.")
+            print("No valid cities specified. Exiting.")
             return
     else:
         # Default to cities B, C, D (indices 1, 2, 3)
@@ -43,34 +39,35 @@ def Test(args):
     # Process each city
     for city_idx in city_indices:
         city_letter = city_names[city_idx]
-        print(f"\n=== Processing City {city_letter} (Test Set) ===")
+        print(f"\n=== Processing City {city_letter} ===")
         
-        # Set the storage path for results
+        # 设置结果的存储路径
         result_path = f'/content/drive/MyDrive'
-        generated_name = f'city{city_letter}_test_generated.csv.gz'
+        generated_name = f'city{city_letter}_generated.csv.gz'
+        reference_name = f'city{city_letter}_reference.csv.gz'
         os.makedirs(result_path, exist_ok=True)
         
-        # Load the test set using the TestSet class
-        # Note: TestSet does not require the is_100val parameter
-        dataset_test = TestSet(path_arr[city_idx])
-        dataloader_test = DataLoader(dataset_test, batch_size=1, num_workers=args.num_workers)
+        # 加载验证集
+        dataset_val = TestSet(path_arr[city_idx])
+        dataloader_val = DataLoader(dataset_val, batch_size=1, num_workers=args.num_workers)
         
-        # Specify the GPU device
+        # 通过cuda:<device_id>指定使用的GPU
         device = torch.device(f'cuda:{args.cuda}')
         
-        # Instantiate the model and load the pre-trained parameters
+        # 实例化LP-BERT模型加载至GPU上，并加载预训练模型的参数
         model = LPBERT(args.layers_num, args.heads_num, args.embed_size, args.city_embed).to(device)
         model.load_state_dict(torch.load(args.pth_file, map_location=device))
         
-        # Initialize a list to store all generated predictions
+        # 初始化存储列表
         all_generated = []
+        all_reference = []
         
-        # Set the model to evaluation mode
-        model.eval()
+        # 模型验证
+        model.eval()  # 评估模式
         
         with torch.no_grad():
-            for data in tqdm(dataloader_test, desc=f"City {city_letter}"):
-                # Load data to GPU
+            for data in tqdm(dataloader_val, desc=f"City {city_letter}"):
+                # 将数据加载到GPU上
                 data['uid'] = data['uid'].to(device)
                 data['d'] = data['d'].to(device)
                 data['t'] = data['t'].to(device)
@@ -78,19 +75,21 @@ def Test(args):
                 data['input_y'] = data['input_y'].to(device)
                 data['time_delta'] = data['time_delta'].to(device)
                 data['city'] = data['city'].to(device)
+                data['label_x'] = data['label_x'].to(device)
+                data['label_y'] = data['label_y'].to(device)
                 data['len'] = data['len'].to(device)
                 
-                # Get the predictions
+                # 获取推测，并将标签堆叠成张量
                 output = model(data['d'], data['t'], data['input_x'], data['input_y'], data['time_delta'], data['len'], data['city'])
+                label = torch.stack((data['label_x'], data['label_y']), dim=-1)
                 
-                # Process the output
-                assert torch.all((data['input_x'] == 201) == (data['input_y'] == 201))
+                # 处理输出
+                assert torch.all((data['input_x'] == 201) == (data['input_y'] == 201))  # 检查x和y的掩码是否一致
                 pred_mask = (data['input_x'] == 201)
                 output = output[pred_mask]
-                
-                # This prediction logic is the same as in your validation script
                 pred = []
                 pre_x, pre_y = -1, -1
+                
                 for step in range(len(output)):
                     if step > 0:
                         output[step][0][pre_x] *= 0.9
@@ -98,26 +97,40 @@ def Test(args):
                     pred.append(torch.argmax(output[step], dim=-1))
                     pre_x, pre_y = pred[-1][0].item(), pred[-1][1].item()
                 
-                # Generate prediction results (uid, d, t, x, y)
+                # 生成预测结果
                 pred = torch.stack(pred)
                 generated = torch.cat((data['uid'][pred_mask].unsqueeze(-1),
                                      data['d'][pred_mask].unsqueeze(-1)-1,
                                      data['t'][pred_mask].unsqueeze(-1)-1,
                                      pred+1), dim=-1).cpu().tolist()
                 
-                # Add the generated points to the list
+                # 生成参考结果（标签）
+                reference = torch.cat((data['uid'][pred_mask].unsqueeze(-1),
+                                     data['d'][pred_mask].unsqueeze(-1)-1,
+                                     data['t'][pred_mask].unsqueeze(-1)-1,
+                                     label[pred_mask]+1), dim=-1).cpu().tolist()
+                
+                # 添加轨迹点 (不使用step_id)
                 for point in generated:
                     all_generated.append(point)
+                
+                for point in reference:
+                    all_reference.append(point)
         
-        # Convert the list to a DataFrame and save
+        # 转换为DataFrame并保存为CSV
         columns = ['uid', 'd', 't', 'x', 'y']
+        
         generated_df = pd.DataFrame(all_generated, columns=columns)
+        reference_df = pd.DataFrame(all_reference, columns=columns)
         
-        # Save the CSV file (compressed)
+        # 保存CSV文件 (compressed)
         generated_df.to_csv(os.path.join(result_path, generated_name), index=False, compression='gzip')
+        reference_df.to_csv(os.path.join(result_path, reference_name), index=False, compression='gzip')
         
-        print(f"Generated test predictions saved to: {os.path.join(result_path, generated_name)}")
+        print(f"Generated trajectories saved to: {os.path.join(result_path, generated_name)}")
+        print(f"Reference trajectories saved to: {os.path.join(result_path, reference_name)}")
         print(f"Total generated points: {len(all_generated)}")
+        print(f"Total reference points: {len(all_reference)}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -132,4 +145,4 @@ if __name__ == '__main__':
                        help='Cities to process (e.g., --cities B C D). If not specified, defaults to B C D')
     
     args = parser.parse_args()
-    Test(args)
+    Validation(args)
