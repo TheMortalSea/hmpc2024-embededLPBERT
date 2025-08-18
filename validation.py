@@ -70,14 +70,14 @@ def Test(args):
         
         with torch.no_grad():
             for data in tqdm(dataloader_test, desc=f"City {city_letter}"):
-                 # --- ADD THE TEMPORARY CHECK HERE ---
-                max_x = torch.max(data['input_x']).item()
-                min_x = torch.min(data['input_x']).item()
-                max_y = torch.max(data['input_y']).item()
-                min_y = torch.min(data['input_y']).item()
+                #  # --- ADD THE TEMPORARY CHECK HERE ---
+                # max_x = torch.max(data['input_x']).item()
+                # min_x = torch.min(data['input_x']).item()
+                # max_y = torch.max(data['input_y']).item()
+                # min_y = torch.min(data['input_y']).item()
                 
-                print(f"Current batch - Max X: {max_x}, Min X: {min_x}")
-                print(f"Current batch - Max Y: {max_y}, Min Y: {min_y}")
+                # print(f"Current batch - Max X: {max_x}, Min X: {min_x}")
+                # print(f"Current batch - Max Y: {max_y}, Min Y: {min_y}")
                 
                 if max_x > 201 or max_y > 201:
                     print("ERROR: Found an out-of-bounds value!")
