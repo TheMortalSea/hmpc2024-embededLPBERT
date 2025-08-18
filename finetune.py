@@ -141,25 +141,27 @@ def finetune(args):
 
             step = epoch_id * len(dataloader_train) + batch_id
         
-    # After the inner loop, calculate the average loss for the epoch
-    avg_epoch_loss = total_epoch_loss / len(dataloader_train)
-    
-    # Log the average epoch loss
-    # wandb.log({"epoch_loss": avg_epoch_loss, "epoch": epoch_id})
+        # After the inner loop, calculate the average loss for the epoch
+        avg_epoch_loss = total_epoch_loss / len(dataloader_train)
+        
+        # Log the average epoch loss
+        # wandb.log({"epoch_loss": avg_epoch_loss, "epoch": epoch_id})
 
-    scheduler.step()
+        scheduler.step()
 
-    # Now, use the average epoch loss for the saving condition
-    current_time = datetime.datetime.now()
-    if avg_epoch_loss < best_loss:
-        best_loss = avg_epoch_loss
-        save_dir = '/content/drive/MyDrive'
-        os.makedirs(save_dir, exist_ok=True)
-        model_save_path = f'{save_dir}/best_finetune_model.pth'
-        torch.save(model.state_dict(), model_save_path)
-        print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
-    else:
-        print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
+        best_loss = float('inf')
+
+        # Now, use the average epoch loss for the saving condition
+        current_time = datetime.datetime.now()
+        if avg_epoch_loss < best_loss:
+            best_loss = avg_epoch_loss
+            save_dir = '/content/drive/MyDrive'
+            os.makedirs(save_dir, exist_ok=True)
+            model_save_path = f'{save_dir}/best_finetune_model.pth'
+            torch.save(model.state_dict(), model_save_path)
+            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+        else:
+            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
 
 
 
