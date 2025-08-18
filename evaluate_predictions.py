@@ -163,7 +163,7 @@ def evaluate_all_cities(base_path, cities):
     for city in cities:
         # Construct file paths
         reference_file = os.path.join(base_path, f'city{city}_reference.csv.gz')
-        generated_file = os.path.join(base_path, f'city{city}_generated.csv.gz')
+        generated_file = os.path.join(base_path, f'city{city}_test_generated.csv.gz')
         
         # Check if both files exist
         if not os.path.exists(reference_file):
