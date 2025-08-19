@@ -11,6 +11,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
+
 import wandb
 
 from dataset import *
@@ -71,117 +72,187 @@ def collate_fn(batch):
     }
 
 
-# 训练函数
-def train(args):
+# # 训练函数
+# def train(args):
 
-    # 设置日志文件名
-    # name = f'batchsize{args.batch_size}_epochs{args.epochs}_embedsize{args.embed_size}_layersnum{args.layers_num}_headsnum{args.heads_num}_cuda{args.cuda}_lr{args.lr}_seed{args.seed}'
-    name = 'LPBERT-postembedABCD_test'
-    # current_time = datetime.datetime.now()
+#     # 设置日志文件名
+#     # name = f'batchsize{args.batch_size}_epochs{args.epochs}_embedsize{args.embed_size}_layersnum{args.layers_num}_headsnum{args.heads_num}_cuda{args.cuda}_lr{args.lr}_seed{args.seed}'
+#     name = 'LPBERT-postembedABCD_test'
+#     # current_time = datetime.datetime.now()
 
-    # 初始化 wandb
-    # wandb.init(project="LPBERT", name=name, config=args)
-    # wandb.run.name = name  # Set the run name
-    # wandb.run.save()
+#     # 初始化 wandb
+#     # wandb.init(project="LPBERT", name=name, config=args)
+#     # wandb.run.name = name  # Set the run name
+#     # wandb.run.save()
 
-    # 加载训练集
-    dataset_train = TrainSet(path_arr[:])
-    dataloader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=args.num_workers)
+#     # 加载训练集
+#     dataset_train = TrainSet(path_arr[:])
+#     # dataloader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=args.num_workers)
+#     dataloader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=args.num_workers, pin_memory=True)
+#     # 通过cuda:<device_id>指定使用的GPU
+#     device = torch.device(f'cuda:{args.cuda}')
 
-    # 通过cuda:<device_id>指定使用的GPU
-    device = torch.device(f'cuda:{args.cuda}')
+#     # 实例化LP-BERT模型，并加载至GPU上
+#     model = LPBERT(args.layers_num, args.heads_num, args.embed_size, args.cityembed_size).to(device)
 
-    # 实例化LP-BERT模型，并加载至GPU上
-    model = LPBERT(args.layers_num, args.heads_num, args.embed_size, args.cityembed_size).to(device)
+#     # 指定Adam优化器、CosineAnnealingLR学习率调度器、交叉熵损失函数
+#     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+#     scheduler =torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+#     criterion = nn.CrossEntropyLoss()
 
-    # 指定Adam优化器、CosineAnnealingLR学习率调度器、交叉熵损失函数
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    scheduler =torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-    criterion = nn.CrossEntropyLoss()
+#     # 训练循环
+#     for epoch_id in range(args.epochs):
+#         total_epoch_loss = 0
+#         for batch_id, batch in enumerate(tqdm(dataloader_train)):
 
-    # 训练循环
-    for epoch_id in range(args.epochs):
-        total_epoch_loss = 0
-        for batch_id, batch in enumerate(tqdm(dataloader_train)):
+#             # 按批次将数据加载至GPU中
+#             batch['d'] = batch['d'].to(device)
+#             batch['t'] = batch['t'].to(device)
+#             batch['input_x'] = batch['input_x'].to(device)
+#             batch['input_y'] = batch['input_y'].to(device)
+#             batch['time_delta'] = batch['time_delta'].to(device)
+#             batch['city'] = batch['city'].to(device)
+#             batch['label_x'] = batch['label_x'].to(device)
+#             batch['label_y'] = batch['label_y'].to(device)
+#             batch['len'] = batch['len'].to(device)
 
-            # 按批次将数据加载至GPU中
-            batch['d'] = batch['d'].to(device)
-            batch['t'] = batch['t'].to(device)
-            batch['input_x'] = batch['input_x'].to(device)
-            batch['input_y'] = batch['input_y'].to(device)
-            batch['time_delta'] = batch['time_delta'].to(device)
-            batch['city'] = batch['city'].to(device)
-            batch['label_x'] = batch['label_x'].to(device)
-            batch['label_y'] = batch['label_y'].to(device)
-            batch['len'] = batch['len'].to(device)
+#             def check_range(name, tensor, max_allowed):
+#                 if tensor.max() >= max_allowed or tensor.min() < 0:
+#                     print(f"[ERROR] {name} out of range!")
+#                     print(f"Min: {tensor.min().item()}, Max: {tensor.max().item()}, Allowed: 0–{max_allowed-1}")
+#                     raise ValueError(f"{name} values out of range.")
 
-            def check_range(name, tensor, max_allowed):
-                if tensor.max() >= max_allowed or tensor.min() < 0:
-                    print(f"[ERROR] {name} out of range!")
-                    print(f"Min: {tensor.min().item()}, Max: {tensor.max().item()}, Allowed: 0–{max_allowed-1}")
-                    raise ValueError(f"{name} values out of range.")
+#             check_range("day", batch['d'], model.embedding_layer.day_embedding.day_embedding.num_embeddings)
+#             check_range("time", batch['t'], model.embedding_layer.time_embedding.time_embedding.num_embeddings)
+#             check_range("location_x", batch['input_x'], model.embedding_layer.location_x_embedding.location_embedding.num_embeddings)
+#             check_range("location_y", batch['input_y'], model.embedding_layer.location_y_embedding.location_embedding.num_embeddings)
+#             check_range("timedelta", batch['time_delta'], model.embedding_layer.timedelta_embedding.timedelta_embedding.num_embeddings)
+#             check_range("city", batch['city'], model.city_embedding.city_embedding.num_embeddings)
+#             # 将数据输入模型中得到输出
+#             output = model(batch['d'], batch['t'], batch['input_x'], batch['input_y'], batch['time_delta'], batch['len'], batch['city'])
 
-            check_range("day", batch['d'], model.embedding_layer.day_embedding.day_embedding.num_embeddings)
-            check_range("time", batch['t'], model.embedding_layer.time_embedding.time_embedding.num_embeddings)
-            check_range("location_x", batch['input_x'], model.embedding_layer.location_x_embedding.location_embedding.num_embeddings)
-            check_range("location_y", batch['input_y'], model.embedding_layer.location_y_embedding.location_embedding.num_embeddings)
-            check_range("timedelta", batch['time_delta'], model.embedding_layer.timedelta_embedding.timedelta_embedding.num_embeddings)
-            check_range("city", batch['city'], model.city_embedding.city_embedding.num_embeddings)
-            # 将数据输入模型中得到输出
-            output = model(batch['d'], batch['t'], batch['input_x'], batch['input_y'], batch['time_delta'], batch['len'], batch['city'])
+#             # 将x和y堆叠成一个张量
+#             label = torch.stack((batch['label_x'], batch['label_y']), dim=-1)
 
-            # 将x和y堆叠成一个张量
-            label = torch.stack((batch['label_x'], batch['label_y']), dim=-1)
+#             # 创建预测掩码，并将其扩展至与label相同的维度
+#             pred_mask = (batch['input_x'] == 201)
+#             pred_mask = torch.cat((pred_mask.unsqueeze(-1), pred_mask.unsqueeze(-1)), dim=-1)
 
-            # 创建预测掩码，并将其扩展至与label相同的维度
-            pred_mask = (batch['input_x'] == 201)
-            pred_mask = torch.cat((pred_mask.unsqueeze(-1), pred_mask.unsqueeze(-1)), dim=-1)
-
-            # 计算损失，反向传播计算梯度并更新模型参数，清除累积梯度
-            loss = criterion(output[pred_mask], label[pred_mask])
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+#             # 计算损失，反向传播计算梯度并更新模型参数，清除累积梯度
+#             loss = criterion(output[pred_mask], label[pred_mask])
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
             
-            total_epoch_loss += loss.detach().item()
+#             total_epoch_loss += loss.detach().item()
 
-            step = epoch_id * len(dataloader_train) + batch_id
+#             step = epoch_id * len(dataloader_train) + batch_id
 
-            # 使用 wandb 记录 loss
-            # wandb.log({"loss": loss.detach().item(), "step": step})
+#             # 使用 wandb 记录 loss
+#             # wandb.log({"loss": loss.detach().item(), "step": step})
 
-        avg_epoch_loss = total_epoch_loss / len(dataloader_train)
+#         avg_epoch_loss = total_epoch_loss / len(dataloader_train)
 
+#         scheduler.step()
+
+#         # Add this before your training loop (after model initialization)
+#         best_loss = float('inf')  # Initialize with infinity
+
+#         # Then in your training loop, replace your saving block with:
+#         current_time = datetime.datetime.now()
+#         if avg_epoch_loss < best_loss:
+#             best_loss = avg_epoch_loss
+#             save_dir = '/content/drive/MyDrive'
+#             os.makedirs(save_dir, exist_ok=True)
+#             model_save_path = f'{save_dir}/best_pretrain_model.pth'
+#             torch.save(model.state_dict(), model_save_path)
+#             print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+#         else:
+#             print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
+
+from torch.cuda.amp import autocast, GradScaler
+
+def train(args):
+    set_random_seed(args.seed)
+    dataset_train = TrainSet(path_arr[:])
+    dataloader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=args.num_workers, pin_memory=True)
+    dataset_val = TrainSet(path_arr[:], train=False)  # Assuming train/val split
+    dataloader_val = DataLoader(dataset_val, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn, num_workers=args.num_workers, pin_memory=True)
+    device = torch.device(f'cuda:{args.cuda}')
+    model = LPBERT(args.layers_num, args.heads_num, args.embed_size, args.cityembed_size).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    criterion = nn.CrossEntropyLoss()
+    scaler = GradScaler()
+    best_val_loss = float('inf')
+    patience = 10
+    counter = 0
+    save_frequency = 5
+
+    for epoch_id in range(args.epochs):
+        model.train()
+        for batch in tqdm(dataloader_train):
+            batch = {k: v.to(device) for k, v in batch.items()}
+            optimizer.zero_grad()
+            with autocast():
+                output = model(batch['d'], batch['t'], batch['input_x'], batch['input_y'], batch['time_delta'], batch['len'], batch['city'])
+                label = torch.stack((batch['label_x'], batch['label_y']), dim=-1)
+                pred_mask = (batch['input_x'] == 201)
+                pred_mask = torch.cat((pred_mask.unsqueeze(-1), pred_mask.unsqueeze(-1)), dim=-1)
+                loss = criterion(output[pred_mask], label[pred_mask])
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            print(f"Batch Loss: {loss.detach().item():.4f}")
         scheduler.step()
+        print(f"Epoch {epoch_id}, Train Loss: {loss.detach().item():.4f}")
 
-        # Add this before your training loop (after model initialization)
-        best_loss = float('inf')  # Initialize with infinity
+        # Validation
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for batch in dataloader_val:
+                batch = {k: v.to(device) for k, v in batch.items()}
+                with autocast():
+                    output = model(batch['d'], batch['t'], batch['input_x'], batch['input_y'], batch['time_delta'], batch['len'], batch['city'])
+                    label = torch.stack((batch['label_x'], batch['label_y']), dim=-1)
+                    pred_mask = (batch['input_x'] == 201)
+                    pred_mask = torch.cat((pred_mask.unsqueeze(-1), pred_mask.unsqueeze(-1)), dim=-1)
+                    val_loss += criterion(output[pred_mask], label[pred_mask]).item()
+        val_loss /= len(dataloader_val)
+        print(f"Epoch {epoch_id}, Val Loss: {val_loss:.4f}")
 
-        # Then in your training loop, replace your saving block with:
-        current_time = datetime.datetime.now()
-        if avg_epoch_loss < best_loss:
-            best_loss = avg_epoch_loss
-            save_dir = '/content/drive/MyDrive'
-            os.makedirs(save_dir, exist_ok=True)
-            model_save_path = f'{save_dir}/best_pretrain_model.pth'
+        # Save best model
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            counter = 0
+            os.makedirs('checkpoints', exist_ok=True)
+            model_save_path = os.path.join('checkpoints', 'best_model.pth')
             torch.save(model.state_dict(), model_save_path)
-            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
         else:
-            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
+            counter += 1
+            if counter >= patience:
+                print("Early stopping triggered")
+                break
 
+        # Save periodically
+        if (epoch_id + 1) % save_frequency == 0:
+            os.makedirs('checkpoints', exist_ok=True)
+            model_save_path = os.path.join('checkpoints', f'model_epoch{epoch_id + 1}.pth')
+            torch.save(model.state_dict(), model_save_path)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--num_workers', type=int, default=6)
+    parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
     parser.add_argument('--heads_num', type=int, default=8)
     parser.add_argument('--cuda', type=int, default=0)
-    parser.add_argument('--lr', type=float, default=2e-5)
+    parser.add_argument('--lr', type=float, default=1e-4) #2e-5
     parser.add_argument('--seed', type=int, default=3407)
     args = parser.parse_args()
 
