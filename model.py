@@ -3,6 +3,7 @@
 
 import torch
 from torch import nn
+from torch.cuda.amp import autocast, GradScaler
 
 # embedding of day, timeslot, x, and y 
 

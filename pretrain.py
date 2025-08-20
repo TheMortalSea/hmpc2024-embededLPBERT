@@ -1,3 +1,4 @@
+
 import os
 import argparse
 import logging
@@ -170,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument('--layers_num', type=int, default=4)
     parser.add_argument('--heads_num', type=int, default=8)
     parser.add_argument('--cuda', type=int, default=0)
-    parser.add_argument('--lr', type=float, default=6e-4)
+    parser.add_argument('--lr', type=float, default=4e-4)
     parser.add_argument('--seed', type=int, default=3407)
     args = parser.parse_args()
 
