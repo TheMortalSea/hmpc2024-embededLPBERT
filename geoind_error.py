@@ -1,20 +1,25 @@
+# check_dataset.py
 import torch
 from torch.utils.data import DataLoader
 import argparse
 
-from model import MyModel   # <-- adjust to your actual model class name
-from pretrain import get_dataset  # <-- adjust if dataset loader is named differently
+from dataset import TrainSet
+from model import LPBERT
+from pretrain import path_arr   # reuse same dataset paths
 
 def check_dataset(args):
     # === Load dataset ===
-    dataset = get_dataset(args)   # pretrain.py should have a function for this
+    dataset = TrainSet(path_arr)
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
     # === Build model to get n_classes ===
-    model = MyModel(args)
-    n_classes = model.output_dim if hasattr(model, "output_dim") else None
-    if n_classes is None:
-        raise ValueError("❌ Could not determine number of classes from model")
+    model = LPBERT(
+        args.layers_num,
+        args.heads_num,
+        args.embed_size,
+        args.cityembed_size
+    )
+    n_classes = model.out_linear.out_features  # last layer output size
 
     print(f"✅ Loaded dataset with {len(dataset)} samples")
     print(f"✅ Model expects {n_classes} classes")
@@ -22,14 +27,15 @@ def check_dataset(args):
     # === Scan labels ===
     invalid_indices = []
     all_labels = []
-    for batch_idx, (inputs, labels) in enumerate(loader):
+    for batch_idx, batch in enumerate(loader):
+        # batch format depends on TrainSet __getitem__, 
+        # but labels usually come last (adjust if needed)
+        *inputs, labels = batch
         if not torch.is_tensor(labels):
             labels = torch.tensor(labels)
 
-        # Track stats
         all_labels.append(labels)
 
-        # Find invalids
         mask_invalid = (labels < 0) | (labels >= n_classes)
         if mask_invalid.any():
             bad = labels[mask_invalid]
@@ -51,9 +57,11 @@ def check_dataset(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # Add the same args as pretrain.py (so dataset/model init works)
     parser.add_argument("--batch_size", type=int, default=32)
-    # add other args here if needed (e.g., dataset path, vocab size, etc.)
+    parser.add_argument("--layers_num", type=int, default=4)
+    parser.add_argument("--heads_num", type=int, default=8)
+    parser.add_argument("--embed_size", type=int, default=256)
+    parser.add_argument("--cityembed_size", type=int, default=64)
     args = parser.parse_args()
 
     check_dataset(args)
