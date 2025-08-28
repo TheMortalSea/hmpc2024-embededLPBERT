@@ -153,11 +153,8 @@ def train(args):
         current_time = datetime.datetime.now()
         if avg_epoch_loss < best_loss:
             best_loss = avg_epoch_loss
-            save_dir = '/content/drive/MyDrive'
-            os.makedirs(save_dir, exist_ok=True)
-            model_save_path = f'{save_dir}/best_pretrain_model.pth'
-            torch.save(model.state_dict(), model_save_path)
-            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {model_save_path}")
+            torch.save(model.state_dict(), args.save_path)
+            print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - NEW BEST! Model saved to {args.save_path}")
         else:
             print(f"Epoch {epoch_id + 1}/{args.epochs}, Average Loss: {avg_epoch_loss:.4f} - Best loss still: {best_loss:.4f}")
 
@@ -169,10 +166,10 @@ if __name__ == '__main__':
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
-    parser.add_argument('--heads_num', type=int, default=8)
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--lr', type=float, default=4e-4)
     parser.add_argument('--seed', type=int, default=3407)
+    parser.add_argument('--save_path', type=str, default='/content/drive/MyDrive/best_LPBERT_model.pth', help='Path to save the best model (including filename)')
     args = parser.parse_args()
 
     set_random_seed(args.seed)
