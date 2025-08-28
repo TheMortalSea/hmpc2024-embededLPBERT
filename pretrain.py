@@ -166,6 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
     parser.add_argument('--layers_num', type=int, default=4)
+    parser.add_argument('--heads_num', type=int, default=8, help='Number of attention heads in LP-BERT')
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--lr', type=float, default=4e-4)
     parser.add_argument('--seed', type=int, default=3407)
