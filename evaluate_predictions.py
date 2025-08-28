@@ -162,8 +162,8 @@ def evaluate_all_cities(base_path, cities):
     # Process each city
     for city in cities:
         # Construct file paths
-        reference_file = os.path.join(base_path, f'city{city}_reference_LPBERT.csv.gz')
-        generated_file = os.path.join(base_path, f'city{city}_test_generated_LPBERT.csv.gz')
+        reference_file = os.path.join(base_path, f'city_{city}_reference_LPBERT.csv.gz')
+        generated_file = os.path.join(base_path, f'city_{city}_test_generated_LPBERT.csv.gz')
         
         # Check if both files exist
         if not os.path.exists(reference_file):
