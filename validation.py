@@ -20,7 +20,6 @@ def Test(args):
     """
     Performs inference on the test set for cities B, C, and D using city-specific fine-tuned LPBERT models.
     The test set contains 3000 users for cities B, C, and D.
-    Note: The TestSet class typically does not provide ground-truth labels unless modified.
     """
     # Determine which cities to process
     if args.cities:
@@ -50,7 +49,6 @@ def Test(args):
         
         # Set the storage path for results
         generated_name = f'city_{city_letter}_test_generated_LPBERT.csv.gz'
-        ground_truth_name = f'city_{city_letter}_reference_LPBERT.csv.gz'
         
         # Load the test set using the TestSet class
         dataset_test = TestSet(path_arr[city_idx])
@@ -69,9 +67,8 @@ def Test(args):
             print(f"Error: Fine-tuned model file {model_path} not found. Skipping City {city_letter}.")
             continue
         
-        # Initialize lists to store predictions and ground truth
+        # Initialize list to store predictions
         all_generated = []
-        all_ground_truth = []
         
         # Set the model to evaluation mode
         model.eval()
@@ -87,11 +84,6 @@ def Test(args):
                 data['time_delta'] = data['time_delta'].to(device)
                 data['city'] = data['city'].to(device)
                 data['len'] = data['len'].to(device)
-                
-                # Include label_x and label_y if available
-                if 'label_x' in data and 'label_y' in data:
-                    data['label_x'] = data['label_x'].to(device)
-                    data['label_y'] = data['label_y'].to(device)
                 
                 # Get the predictions
                 output = model(data['d'], data['t'], data['input_x'], data['input_y'], 
@@ -120,18 +112,6 @@ def Test(args):
                 # Add the generated points to the list
                 for point in generated:
                     all_generated.append(point)
-                
-                # Extract ground truth for the same masked positions
-                if 'label_x' in data and 'label_y' in data:
-                    ground_truth = torch.cat((data['uid'][pred_mask].unsqueeze(-1),
-                                            data['d'][pred_mask].unsqueeze(-1)-1,
-                                            data['t'][pred_mask].unsqueeze(-1)-1,
-                                            data['label_x'][pred_mask].unsqueeze(-1)+1,
-                                            data['label_y'][pred_mask].unsqueeze(-1)+1), dim=-1).cpu().tolist()
-                    
-                    # Add the ground truth points to the list
-                    for point in ground_truth:
-                        all_ground_truth.append(point)
         
         # Convert the predictions to a DataFrame and save
         columns = ['uid', 'd', 't', 'x', 'y']
@@ -139,23 +119,13 @@ def Test(args):
         generated_save_path = os.path.join(args.save_path, generated_name)
         generated_df.to_csv(generated_save_path, index=False, compression='gzip')
         
-        # Convert the ground truth to a DataFrame and save
-        if all_ground_truth:
-            ground_truth_df = pd.DataFrame(all_ground_truth, columns=columns)
-            ground_truth_save_path = os.path.join(args.save_path, ground_truth_name)
-            ground_truth_df.to_csv(ground_truth_save_path, index=False, compression='gzip')
-            print(f"Ground truth saved to: {ground_truth_save_path}")
-            print(f"Total ground truth points: {len(all_ground_truth)}")
-        else:
-            print("Warning: No ground truth data found!")
-        
         print(f"Generated test predictions saved to: {generated_save_path}")
         print(f"Total generated points: {len(all_generated)}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pth_dir', type=str, default='/content/drive/MyDrive', help='Directory containing fine-tuned model files')
-    parser.add_argument('--save_path', type=str, default='/content/drive/MyDrive', help='Directory to save generated and reference CSV files')
+    parser.add_argument('--save_path', type=str, default='/content/drive/MyDrive', help='Directory to save generated CSV files')
     parser.add_argument('--num_workers', type=int, default=2)
     parser.add_argument('--embed_size', type=int, default=128)
     parser.add_argument('--cityembed_size', type=int, default=4)
